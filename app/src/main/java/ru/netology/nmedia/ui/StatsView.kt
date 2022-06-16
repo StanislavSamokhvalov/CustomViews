@@ -1,10 +1,8 @@
 package ru.netology.nmedia.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PointF
-import android.graphics.RectF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.withStyledAttributes
@@ -42,6 +40,7 @@ class StatsView @JvmOverloads constructor(
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
     }
+
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
@@ -64,27 +63,25 @@ class StatsView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        var firstColor = 0
         var startFrom = -90F
-
         if (data.isEmpty()) {
             return
         }
 
         for ((index) in data.withIndex()) {
-            val angle = 360F * (data[index] / data.sum())
+            val angle = data[index]
             paint.color = colors.getOrNull(index) ?: randomColor()
-            if (index == 0) {
-                firstColor = paint.color
-            }
             canvas.drawArc(oval, startFrom, angle, false, paint)
             startFrom += angle
         }
 
-        if (onData() == 100F) {
-            paint.color = firstColor
-            canvas.drawArc(oval, startFrom, 1F, false, paint)
+        if  (data.sum() < 360) {
+            paint.color = Color.LTGRAY
+            canvas.drawArc(oval, startFrom, 360 - data.sum(), false, paint)
         }
+
+        paint.color = colors[0]
+        canvas.drawArc(oval, -90F, 1F, false, paint)
 
         canvas.drawText(
             "%.2f%%".format(onData()),
@@ -92,13 +89,12 @@ class StatsView @JvmOverloads constructor(
             center.y + textPaint.textSize / 4,
             textPaint,
         )
-
     }
 
     private fun onData(): Float {
         var total = 0F
-        data.forEachIndexed{ index, _ ->
-            val part = data[index] * 100 / data.sum()
+        data.forEachIndexed { index, _ ->
+            val part = data[index] * 100 / 360
             total += part
         }
         return total
